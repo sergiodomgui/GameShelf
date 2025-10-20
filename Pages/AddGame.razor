@@ -1,0 +1,29 @@
+@page "/addgame"
+@using GameShelfWeb.Models
+@using GameShelfWeb.Data
+@inject GameService GameService
+@inject NavigationManager Navigation
+
+<h3>Añadir Juego</h3>
+
+<EditForm Model="newGame" OnValidSubmit="HandleValidSubmit">
+    <InputText @bind-Value="newGame.Title" placeholder="Título" class="form-control mb-2" />
+    <InputText @bind-Value="newGame.Platform" placeholder="Plataforma" class="form-control mb-2" />
+    <InputSelect @bind-Value="newGame.Status" class="form-control mb-2">
+        @foreach (var status in Enum.GetValues<GameStatus>())
+        {
+            <option value="@status">@status</option>
+        }
+    </InputSelect>
+    <button type="submit" class="btn btn-success">Guardar</button>
+</EditForm>
+
+@code {
+    private Game newGame = new Game();
+
+    private void HandleValidSubmit()
+    {
+        GameService.Add(newGame);
+        Navigation.NavigateTo("/");
+    }
+}

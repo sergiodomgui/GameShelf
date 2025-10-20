@@ -1,0 +1,35 @@
+@page "/"
+@using GameShelfWeb.Models
+@using GameShelfWeb.Data
+@inject GameService GameService
+
+<h1>🎮 GameShelf</h1>
+
+<a class="btn btn-primary mb-3" href="/addgame">➕ Añadir Juego</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Título</th><th>Plataforma</th><th>Estado</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var game in GameService.GetAll())
+        {
+            <tr>
+                <td>@game.Title</td>
+                <td>@game.Platform</td>
+                <td>@game.Status</td>
+                <td>
+                    <a class="btn btn-sm btn-secondary" href="/editgame/@game.Id">Editar</a>
+                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteGame(game.Id)">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private void DeleteGame(Guid id)
+    {
+        GameService.Remove(id);
+    }
+}
