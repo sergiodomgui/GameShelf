@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization; // Necesario para CsvHelper
+using System.IO;            // Necesario para leer archivos
 using System.Linq;
+using CsvHelper;            // Librería para leer CSV
 using GameShelfWeb.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -52,42 +55,97 @@ namespace GameShelfWeb.Data
             else g.DateCompleted = null;
             Update(g);
         }
-
-        // --- Nuevos métodos ---
-
-        // Rellena la base con datos de ejemplo si está vacía
+        
+        // Rellena la base con datos del CSV si está vacía (VERSIÓN CON DEPURACIÓN)
         public void SeedIfEmpty()
         {
-            if (_db.Games.Any()) return;
+            Console.WriteLine("--- [DEBUG] Ejecutando SeedIfEmpty... ---");
 
-            var now = DateTime.UtcNow;
-            var seed = new List<Game>
+            if (_db.Games.Any())
             {
-                new Game { Title = "The Legend of Example", Platform = "Switch", Status = GameStatus.Completed, DateCompleted = now.AddDays(-40), Description = "A classic adventure to learn the basics." },
-                new Game { Title = "Space Adventures", Platform = "PC", Status = GameStatus.Playing, Description = "Exploration + roguelite." },
-                new Game { Title = "Puzzle Time", Platform = "Mobile", Status = GameStatus.Paused, Description = "Casual puzzles for short sessions." },
-                new Game { Title = "Future Wish", Platform = "PS5", Status = GameStatus.Wishlist, Description = "AAA open-world on my wishlist." },
-                new Game { Title = "Retro Racer", Platform = "PC", Status = GameStatus.Completed, DateCompleted = now.AddMonths(-2), Description = "Arcade racing with pixel art." },
-                new Game { Title = "Mystery Manor", Platform = "PC", Status = GameStatus.Wishlist, Description = "Narrative mystery game." },
-                new Game { Title = "Skybound", Platform = "Xbox", Status = GameStatus.Playing, Description = "Action RPG in flight." },
-                new Game { Title = "Island Builder", Platform = "Switch", Status = GameStatus.Paused, Description = "Relaxing base-building game." }
-            };
+                Console.WriteLine("[DEBUG] La base de datos ya tiene datos. No se hará nada.");
+                return;
+            }
+            
+            Console.WriteLine("[DEBUG] La base de datos está vacía. Intentando cargar desde CSV.");
 
-            _db.Games.AddRange(seed);
-            _db.SaveChanges();
+            // Ruta al archivo CSV.
+            var csvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "games_data.csv");
+            Console.WriteLine($"[DEBUG] Buscando archivo CSV en la ruta: {csvPath}");
+
+            if (!File.Exists(csvPath))
+            {
+                Console.WriteLine("[DEBUG] ¡ERROR! No se encontró el archivo CSV en esa ruta.");
+                return;
+            }
+            
+            Console.WriteLine("[DEBUG] Archivo CSV encontrado. Procediendo a leerlo.");
+            var gamesToAdd = new List<Game>();
+
+            try
+            {
+                using (var reader = new StreamReader(csvPath))
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                {
+                    var records = csv.GetRecords<dynamic>().ToList();
+                    Console.WriteLine($"[DEBUG] Se encontraron {records.Count} filas en el archivo CSV.");
+
+                    foreach (var record in records)
+                    {
+                        var game = new Game();
+                        game.Title = record.name;
+                        string platformsString = record.platforms ?? "";
+                        game.Platform = platformsString.Split(',').FirstOrDefault()?.Trim() ?? "N/A";
+                        int.TryParse(record.added_status_playing, out int playingCount);
+                        int.TryParse(record.added_status_beaten, out int beatenCount);
+                        int.TryParse(record.added_status_toplay, out int toplayCount);
+
+                        if (playingCount > 0) game.Status = GameStatus.Playing;
+                        else if (beatenCount > 0) game.Status = GameStatus.Completed;
+                        else if (toplayCount > 0) game.Status = GameStatus.Wishlist;
+                        else game.Status = GameStatus.Wishlist;
+
+                        if (game.Status == GameStatus.Completed)
+                        {
+                            if (DateTime.TryParse(record.updated, out DateTime updatedDate))
+                            {
+                                game.DateCompleted = updatedDate.ToUniversalTime();
+                            }
+                        }
+                        game.Description = $"Genres: {record.genres}";
+                        gamesToAdd.Add(game);
+                    }
+                }
+
+                if (gamesToAdd.Any())
+                {
+                    Console.WriteLine($"[DEBUG] Se van a añadir {gamesToAdd.Count} juegos a la base de datos.");
+                    _db.Games.AddRange(gamesToAdd);
+                    _db.SaveChanges();
+                    Console.WriteLine("[DEBUG] ¡ÉXITO! Los datos se guardaron en la base de datos.");
+                }
+                else
+                {
+                    Console.WriteLine("[DEBUG] Aunque se leyó el CSV, no se procesó ningún juego para añadir.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Esta línea es crucial. Si hay un error al leer el CSV, lo mostrará.
+                Console.WriteLine($"[DEBUG] ¡ERROR CATASTRÓFICO! Falló la lectura del CSV: {ex.Message}");
+            }
+            
+            Console.WriteLine("--- [DEBUG] SeedIfEmpty ha finalizado. ---");
         }
 
         // Obtener plataformas distintas (para filtros)
-        // Obtener plataformas distintas (para filtros) - versión segura para EF Core
         public List<string> GetPlatforms()
         {
-            // Traer desde la base sólo la columna Platform (evitamos Trim e IsNullOrEmpty en la parte que EF debe traducir)
             var raw = _db.Games
-                .Where(g => g.Platform != null)   // esta condición se traduce a SQL correctamente
+                .Where(g => g.Platform != null)
                 .Select(g => g.Platform!)
-                .ToList(); // materializamos: a partir de aquí trabajamos en memoria
+                .ToList();
 
-            // Ahora limpiamos/trimeamos y hacemos Distinct/Order en memoria
             var cleaned = raw
                 .Select(p => p.Trim())
                 .Where(p => !string.IsNullOrWhiteSpace(p))
@@ -97,6 +155,5 @@ namespace GameShelfWeb.Data
 
             return cleaned;
         }
-
     }
 }

@@ -50,25 +50,13 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
-            "Microsoft.AspNetCore.Components.Web": {
+            "CsvHelper": {
               "target": "Package",
-              "version": "[9.0.10, )"
-            },
-            "Microsoft.AspNetCore.Components.WebAssembly": {
-              "target": "Package",
-              "version": "[9.0.10, )"
-            },
-            "Microsoft.AspNetCore.Components.WebAssembly.Server": {
-              "target": "Package",
-              "version": "[9.0.10, )"
-            },
-            "Microsoft.EntityFrameworkCore": {
-              "target": "Package",
-              "version": "[9.0.10, )"
+              "version": "[33.1.0, )"
             },
             "Microsoft.EntityFrameworkCore.Sqlite": {
               "target": "Package",
-              "version": "[9.0.10, )"
+              "version": "[9.0.0-preview.5.24306.3, )"
             }
           },
           "imports": [
