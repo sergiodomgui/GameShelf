@@ -1,0 +1,115 @@
+@page "/videojuegos"
+@using GameShelfWeb.Models
+@using GameShelfWeb.Data
+@inject GameRepository Repo
+@inject NavigationManager Nav
+
+<h2>Videojuegos</h2>
+
+<div class="mb-3 row">
+    <div class="col-md-4">
+        <input class="form-control" placeholder="Buscar por título..." @bind="searchTerm" @bind:event="oninput" />
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" @bind="selectedStatus">
+            <option value="">Todos los estados</option>
+            @foreach (var s in Enum.GetValues<GameStatus>()) {
+                <option value="@s">@s</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" @bind="selectedPlatform">
+            <option value="">Todas las plataformas</option>
+            @foreach (var p in platforms) {
+                <option value="@p">@p</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2 text-end">
+        <button class="btn btn-secondary" @onclick="ClearFilters">Limpiar</button>
+    </div>
+</div>
+
+<p class="text-muted">Resultados: @FilteredGames().Count()</p>
+
+<div class="row">
+    @foreach (var g in FilteredGames())
+    {
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
+                    <div>
+                        <h5 class="card-title">@g.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@g.Platform</h6>
+                        <p class="card-text">@((string.IsNullOrWhiteSpace(g.Description)) ? "<em>Sin descripción</em>" : g.Description)</p>
+                    </div>
+
+                    <div class="mt-auto">
+                        <p class="mb-1"><strong>Estado:</strong> @g.Status</p>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => ChangeStatus(g.Id, GameStatus.Playing)">En proceso</button>
+                            <button class="btn btn-sm btn-outline-success" @onclick="() => ChangeStatus(g.Id, GameStatus.Completed)">Jugado</button>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => ChangeStatus(g.Id, GameStatus.Wishlist)">Deseados</button>
+                        </div>
+                        <a class="btn btn-link btn-sm" href="@($"/gamedetails/{g.Id}")">Ver ficha</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string searchTerm = string.Empty;
+    private string selectedStatus = string.Empty;
+    private string selectedPlatform = string.Empty;
+
+    private List<Game> games = new();
+    private List<string> platforms = new();
+
+    protected override void OnInitialized()
+    {
+        games = Repo.GetAll();
+        platforms = Repo.GetPlatforms();
+    }
+
+    private IEnumerable<Game> FilteredGames()
+    {
+        var q = games.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var lower = searchTerm.Trim().ToLowerInvariant();
+            q = q.Where(g => (g.Title ?? "").ToLowerInvariant().Contains(lower) || (g.Description ?? "").ToLowerInvariant().Contains(lower));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedStatus))
+        {
+            if (Enum.TryParse<GameStatus>(selectedStatus, out var s))
+                q = q.Where(g => g.Status == s);
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedPlatform))
+        {
+            q = q.Where(g => string.Equals(g.Platform?.Trim(), selectedPlatform.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        return q.OrderBy(g => g.Title);
+    }
+
+    private void ClearFilters()
+    {
+        searchTerm = "";
+        selectedStatus = "";
+        selectedPlatform = "";
+    }
+
+    private void ChangeStatus(Guid id, GameStatus status)
+    {
+        Repo.SetStatus(id, status);
+        games = Repo.GetAll();       // refrescar lista local
+        platforms = Repo.GetPlatforms();
+        StateHasChanged();
+    }
+}

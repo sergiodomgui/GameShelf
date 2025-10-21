@@ -1,18 +1,19 @@
 @page "/addgame"
 @using GameShelfWeb.Models
 @using GameShelfWeb.Data
-@inject GameService GameService
-@inject NavigationManager Navigation
+@inject GameRepository Repo
+@inject NavigationManager Nav
 
 <h3>Añadir Juego</h3>
 
 <EditForm Model="newGame" OnValidSubmit="HandleValidSubmit">
     <InputText @bind-Value="newGame.Title" placeholder="Título" class="form-control mb-2" />
     <InputText @bind-Value="newGame.Platform" placeholder="Plataforma" class="form-control mb-2" />
+    <InputTextArea @bind-Value="newGame.Description" placeholder="Descripción (opcional)" class="form-control mb-2" />
     <InputSelect @bind-Value="newGame.Status" class="form-control mb-2">
-        @foreach (var status in Enum.GetValues<GameStatus>())
+        @foreach (var s in Enum.GetValues<GameStatus>())
         {
-            <option value="@status">@status</option>
+            <option value="@s">@s</option>
         }
     </InputSelect>
     <button type="submit" class="btn btn-success">Guardar</button>
@@ -23,7 +24,7 @@
 
     private void HandleValidSubmit()
     {
-        GameService.Add(newGame);
-        Navigation.NavigateTo("/");
+        Repo.Add(newGame);
+        Nav.NavigateTo("/");
     }
 }

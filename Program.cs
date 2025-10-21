@@ -1,13 +1,27 @@
 using GameShelfWeb.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Agregar servicios de Blazor
+// Add services
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<GameService>();
+
+// Configurar EF Core con SQLite en archivo local 'games.db'
+var connectionString = $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "games.db")}";
+builder.Services.AddDbContext<GameDbContext>(options => options.UseSqlite(connectionString));
+
+// Registrar repositorio
+builder.Services.AddScoped<GameRepository>();
 
 var app = builder.Build();
+
+// Seed: crear DB y datos si es necesario
+using (var scope = app.Services.CreateScope())
+{
+    var repo = scope.ServiceProvider.GetRequiredService<GameRepository>();
+    repo.SeedIfEmpty();
+}
 
 if (!app.Environment.IsDevelopment())
 {

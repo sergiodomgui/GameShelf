@@ -36,8 +36,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdEdhbWUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[F:/Descargas/exchange_dashboard/gameTracker/GameShelfWeb/GameShelf/Pages/GameDetails.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcR2FtZURldGFpbHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [F:/Descargas/exchange_dashboard/gameTracker/GameShelfWeb/GameShelf/Pages/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[F:/Descargas/exchange_dashboard/gameTracker/GameShelfWeb/GameShelf/Pages/Videojuegos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlkZW9qdWVnb3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [F:/Descargas/exchange_dashboard/gameTracker/GameShelfWeb/GameShelf/_Imports.razor]

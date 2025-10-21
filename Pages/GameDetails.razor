@@ -1,0 +1,48 @@
+@page "/gamedetails/{GameId:guid}"
+@using GameShelfWeb.Models
+@using GameShelfWeb.Data
+@inject GameRepository Repo
+@inject NavigationManager Nav
+
+<h3>Ficha del juego</h3>
+
+@if (game == null) { <p>Cargando...</p> }
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h4 class="card-title">@game.Title</h4>
+            <h6 class="card-subtitle mb-2 text-muted">@game.Platform</h6>
+            <p>@game.Description</p>
+            <p><strong>Estado:</strong> @game.Status</p>
+            @if (game.DateCompleted.HasValue)
+            {
+                <p><em>Completado: @game.DateCompleted.Value.ToString("yyyy-MM-dd")</em></p>
+            }
+            <div class="btn-group" role="group">
+                <button class="btn btn-outline-primary" @onclick="() => SetStatus(GameStatus.Playing)">Marcar en proceso</button>
+                <button class="btn btn-outline-success" @onclick="() => SetStatus(GameStatus.Completed)">Marcar como jugado</button>
+                <button class="btn btn-outline-secondary" @onclick="() => SetStatus(GameStatus.Wishlist)">Agregar a deseados</button>
+            </div>
+            <a class="btn btn-link" href="@($"/editgame/{game.Id}")">Editar ficha</a>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid GameId { get; set; }
+    private Game? game;
+
+    protected override void OnInitialized()
+    {
+        game = Repo.Get(GameId);
+    }
+
+    private void SetStatus(GameStatus status)
+    {
+        if (game == null) return;
+        Repo.SetStatus(game.Id, status);
+        game = Repo.Get(GameId); // refrescar los datos
+        StateHasChanged();
+    }
+}

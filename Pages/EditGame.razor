@@ -1,24 +1,22 @@
 @page "/editgame/{GameId:guid}"
 @using GameShelfWeb.Models
 @using GameShelfWeb.Data
-@inject GameService GameService
-@inject NavigationManager Navigation
+@inject GameRepository Repo
+@inject NavigationManager Nav
 
 <h3>Editar Juego</h3>
 
-@if (game == null)
-{
-    <p>Cargando...</p>
-}
+@if (game == null) { <p>Cargando...</p> }
 else
 {
     <EditForm Model="game" OnValidSubmit="HandleValidSubmit">
         <InputText @bind-Value="game.Title" placeholder="Título" class="form-control mb-2" />
         <InputText @bind-Value="game.Platform" placeholder="Plataforma" class="form-control mb-2" />
+        <InputTextArea @bind-Value="game.Description" placeholder="Descripción" class="form-control mb-2" />
         <InputSelect @bind-Value="game.Status" class="form-control mb-2">
-            @foreach (var status in Enum.GetValues<GameStatus>())
+            @foreach (var s in Enum.GetValues<GameStatus>())
             {
-                <option value="@status">@status</option>
+                <option value="@s">@s</option>
             }
         </InputSelect>
         <button type="submit" class="btn btn-success">Guardar</button>
@@ -31,12 +29,15 @@ else
 
     protected override void OnInitialized()
     {
-        game = GameService.GetAll().FirstOrDefault(g => g.Id == GameId);
+        game = Repo.Get(GameId);
     }
 
     private void HandleValidSubmit()
     {
-        if (game != null) GameService.Update(game);
-        Navigation.NavigateTo("/");
+        if (game != null)
+        {
+            Repo.Update(game);
+            Nav.NavigateTo($"/gamedetails/{game.Id}");
+        }
     }
 }

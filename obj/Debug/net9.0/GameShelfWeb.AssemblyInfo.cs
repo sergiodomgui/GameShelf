@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GameShelfWeb")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d0e620dfb535f249ff66b990903d60fbffae1c6d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8890e38bca66852e85f9ca053ea500ba7b4e3eb1")]
 [assembly: System.Reflection.AssemblyProductAttribute("GameShelfWeb")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GameShelfWeb")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
