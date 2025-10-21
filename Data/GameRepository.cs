@@ -155,5 +155,23 @@ namespace GameShelfWeb.Data
 
             return cleaned;
         }
+
+        // --- Añade estos dos nuevos métodos DENTRO de la clase GameRepository ---
+
+        // Método para contar el total de juegos en la base de datos
+        public int Count() => _db.Games.Count();
+
+        // Método para obtener una página específica de juegos
+        public List<Game> GetPaged(int pageNumber, int pageSize)
+        {
+            // pageNumber = 1 significa la primera página.
+            // Skip omite los juegos de las páginas anteriores.
+            // Take coge solo el número de juegos para la página actual.
+            return _db.Games
+                .OrderBy(g => g.Title)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
     }
 }

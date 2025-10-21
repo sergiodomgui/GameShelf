@@ -1,43 +1,79 @@
 @page "/"
-@using GameShelfWeb.Models
 @using GameShelfWeb.Data
+@using GameShelfWeb.Models
 @inject GameRepository Repo
 
-<h1>🎮 GameShelf</h1>
+<PageTitle>Mi GameShelf</PageTitle>
 
-<a class="btn btn-primary mb-3" href="/addgame">➕ Añadir Juego</a>
+<h1>📚 Mi GameShelf</h1>
 
-<table class="table table-striped">
-    <thead>
-        <tr><th>Título</th><th>Plataforma</th><th>Estado</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
-        @foreach (var game in games)
-        {
+@if (games == null)
+{
+    <p><em>Cargando juegos...</em></p>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary" @onclick="() => ChangePage(-1)" disabled="@(currentPage == 1)">
+            &laquo; Anterior
+        </button>
+        <span>
+            Página <strong>@currentPage</strong> de <strong>@totalPages</strong>
+        </span>
+        <button class="btn btn-primary" @onclick="() => ChangePage(1)" disabled="@(currentPage >= totalPages)">
+            Siguiente &raquo;
+        </button>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td><a href="@($"/gamedetails/{game.Id}")">@game.Title</a></td>
-                <td>@game.Platform</td>
-                <td>@game.Status</td>
-                <td>
-                    <a class="btn btn-sm btn-secondary" href="@($"/editgame/{game.Id}")">Editar</a>
-                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteGame(game.Id)">Eliminar</button>
-                </td>
+                <th>Título</th>
+                <th>Plataforma</th>
+                <th>Estado</th>
+                <th>Fecha Completado</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var game in games)
+            {
+                <tr>
+                    <td>@game.Title</td>
+                    <td>@game.Platform</td>
+                    <td>@game.Status</td>
+                    <td>@game.DateCompleted?.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
-    private List<Game> games = new();
+    private List<Game>? games;
+    private int currentPage = 1;
+    private int pageSize = 20; // ¡Puedes cambiar este número!
+    private int totalGames;
+    private int totalPages;
 
     protected override void OnInitialized()
     {
-        games = Repo.GetAll();
+        totalGames = Repo.Count();
+        totalPages = (int)Math.Ceiling(totalGames / (double)pageSize);
+        LoadGames();
     }
 
-    private void DeleteGame(Guid id)
+    private void LoadGames()
     {
-        Repo.Remove(id);
-        games = Repo.GetAll();
+        games = Repo.GetPaged(currentPage, pageSize);
+    }
+
+    private void ChangePage(int amount)
+    {
+        var newPage = currentPage + amount;
+        if (newPage > 0 && newPage <= totalPages)
+        {
+            currentPage = newPage;
+            LoadGames();
+        }
     }
 }
