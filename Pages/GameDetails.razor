@@ -1,48 +1,50 @@
-@page "/gamedetails/{GameId:guid}"
-@using GameShelfWeb.Models
+@page "/game-details/{Id:guid}"
 @using GameShelfWeb.Data
+@using GameShelfWeb.Models
 @inject GameRepository Repo
-@inject NavigationManager Nav
+@inject NavigationManager Navigation
 
-<h3>Ficha del juego</h3>
+<h3>Detalles del Juego</h3>
 
-@if (game == null) { <p>Cargando...</p> }
+@if (game == null)
+{
+    <p><em>Cargando...</em></p>
+}
 else
 {
-    <div class="card mb-3">
-        <div class="card-body">
-            <h4 class="card-title">@game.Title</h4>
-            <h6 class="card-subtitle mb-2 text-muted">@game.Platform</h6>
-            <p>@game.Description</p>
-            <p><strong>Estado:</strong> @game.Status</p>
-            @if (game.DateCompleted.HasValue)
-            {
-                <p><em>Completado: @game.DateCompleted.Value.ToString("yyyy-MM-dd")</em></p>
-            }
-            <div class="btn-group" role="group">
-                <button class="btn btn-outline-primary" @onclick="() => SetStatus(GameStatus.Playing)">Marcar en proceso</button>
-                <button class="btn btn-outline-success" @onclick="() => SetStatus(GameStatus.Completed)">Marcar como jugado</button>
-                <button class="btn btn-outline-secondary" @onclick="() => SetStatus(GameStatus.Wishlist)">Agregar a deseados</button>
-            </div>
-            <a class="btn btn-link" href="@($"/editgame/{game.Id}")">Editar ficha</a>
-        </div>
+    <h4>@game.Title</h4>
+    <p><strong>Plataforma:</strong> @game.Platform</p>
+    <p><strong>Estado:</strong> @game.Status</p>
+    <p><strong>Descripción:</strong> @game.Description</p>
+    
+    <div class="mt-3">
+        <h5>Cambiar Estado</h5>
+        <button class="btn btn-info" @onclick="() => ChangeStatus(GameStatus.Playing)">Jugando</button>
+        <button class="btn btn-warning" @onclick="() => ChangeStatus(GameStatus.Paused)">Pausado</button>
+        <button class="btn btn-success" @onclick="() => ChangeStatus(GameStatus.Completed)">Completado</button>
     </div>
 }
 
 @code {
-    [Parameter] public Guid GameId { get; set; }
+    [Parameter]
+    public Guid Id { get; set; }
+
     private Game? game;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        game = Repo.Get(GameId);
+        await LoadGame();
     }
 
-    private void SetStatus(GameStatus status)
+    private async Task LoadGame()
     {
-        if (game == null) return;
-        Repo.SetStatus(game.Id, status);
-        game = Repo.Get(GameId); // refrescar los datos
+        game = await Repo.GetAsync(Id); // ✅ Corrected call to GetAsync
+    }
+
+    private async Task ChangeStatus(GameStatus newStatus)
+    {
+        await Repo.SetStatusAsync(Id, newStatus); // ✅ Corrected call to SetStatusAsync
+        await LoadGame(); // Reload the game details to show the change
         StateHasChanged();
     }
 }

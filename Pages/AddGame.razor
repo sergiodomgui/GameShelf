@@ -1,30 +1,33 @@
-@page "/addgame"
-@using GameShelfWeb.Models
+@page "/add-game"
 @using GameShelfWeb.Data
+@using GameShelfWeb.Models
 @inject GameRepository Repo
-@inject NavigationManager Nav
+@inject NavigationManager Navigation
 
-<h3>Añadir Juego</h3>
+<h3>Añadir Nuevo Juego</h3>
 
-<EditForm Model="newGame" OnValidSubmit="HandleValidSubmit">
-    <InputText @bind-Value="newGame.Title" placeholder="Título" class="form-control mb-2" />
-    <InputText @bind-Value="newGame.Platform" placeholder="Plataforma" class="form-control mb-2" />
-    <InputTextArea @bind-Value="newGame.Description" placeholder="Descripción (opcional)" class="form-control mb-2" />
-    <InputSelect @bind-Value="newGame.Status" class="form-control mb-2">
-        @foreach (var s in Enum.GetValues<GameStatus>())
-        {
-            <option value="@s">@s</option>
-        }
-    </InputSelect>
-    <button type="submit" class="btn btn-success">Guardar</button>
+<EditForm Model="@newGame" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="title" class="form-label">Título</label>
+        <InputText id="title" class="form-control" @bind-Value="newGame.Title" />
+    </div>
+    <div class="mb-3">
+        <label for="platform" class="form-label">Plataforma</label>
+        <InputText id="platform" class="form-control" @bind-Value="newGame.Platform" />
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Guardar Juego</button>
 </EditForm>
 
 @code {
-    private Game newGame = new Game();
+    private Game newGame = new();
 
-    private void HandleValidSubmit()
+    private async Task HandleSubmit()
     {
-        Repo.Add(newGame);
-        Nav.NavigateTo("/");
+        await Repo.AddAsync(newGame); //  Corrected call to AddAsync
+        Navigation.NavigateTo("/"); // Go back to the main list
     }
 }

@@ -1,43 +1,55 @@
-@page "/editgame/{GameId:guid}"
-@using GameShelfWeb.Models
+@page "/edit-game/{Id:guid}"
 @using GameShelfWeb.Data
+@using GameShelfWeb.Models
 @inject GameRepository Repo
-@inject NavigationManager Nav
+@inject NavigationManager Navigation
 
 <h3>Editar Juego</h3>
 
-@if (game == null) { <p>Cargando...</p> }
+@if (gameToEdit == null)
+{
+    <p><em>Cargando...</em></p>
+}
 else
 {
-    <EditForm Model="game" OnValidSubmit="HandleValidSubmit">
-        <InputText @bind-Value="game.Title" placeholder="Título" class="form-control mb-2" />
-        <InputText @bind-Value="game.Platform" placeholder="Plataforma" class="form-control mb-2" />
-        <InputTextArea @bind-Value="game.Description" placeholder="Descripción" class="form-control mb-2" />
-        <InputSelect @bind-Value="game.Status" class="form-control mb-2">
-            @foreach (var s in Enum.GetValues<GameStatus>())
-            {
-                <option value="@s">@s</option>
-            }
-        </InputSelect>
-        <button type="submit" class="btn btn-success">Guardar</button>
+    <EditForm Model="@gameToEdit" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="title" class="form-label">Título</label>
+            <InputText id="title" class="form-control" @bind-Value="gameToEdit.Title" />
+        </div>
+        <div class="mb-3">
+            <label for="platform" class="form-label">Plataforma</label>
+            <InputText id="platform" class="form-control" @bind-Value="gameToEdit.Platform" />
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Actualizar Juego</button>
     </EditForm>
 }
 
 @code {
-    [Parameter] public Guid GameId { get; set; }
-    private Game? game;
+    [Parameter]
+    public Guid Id { get; set; }
 
-    protected override void OnInitialized()
+    private Game? gameToEdit;
+
+    // Se convierte a la versión asíncrona
+    protected override async Task OnInitializedAsync()
     {
-        game = Repo.Get(GameId);
+        // Corregido: Llama a GetAsync con await
+        gameToEdit = await Repo.GetAsync(Id); 
     }
 
-    private void HandleValidSubmit()
+    // Se convierte a la versión asíncrona
+    private async Task HandleSubmit()
     {
-        if (game != null)
+        if (gameToEdit != null)
         {
-            Repo.Update(game);
-            Nav.NavigateTo($"/gamedetails/{game.Id}");
+            // Corregido: Llama a UpdateAsync con await
+            await Repo.UpdateAsync(gameToEdit); 
+            Navigation.NavigateTo("/");
         }
     }
 }
